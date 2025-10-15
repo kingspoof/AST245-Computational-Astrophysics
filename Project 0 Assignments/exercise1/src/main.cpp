@@ -7,6 +7,7 @@
 // includes of some of our helper classes
 #include "Vector2D.hpp"
 #include "SimulationResult.hpp"
+#include "Phase.hpp"
 
 // inclusion of the time integrators we want to use
 #include "ExplicitEuler.hpp"
@@ -49,7 +50,7 @@ double angular_momentum(const Vector2D& r, const Vector2D& v)
 int main() {
     // create instances of our integrators
     ExplicitEuler explicit_euler(rdotdot, total_energy, angular_momentum);
-    //RungeKutta runge_kutta(rdotdot, total_energy, angular_momentum);
+    RungeKutta runge_kutta(rdotdot, total_energy, angular_momentum);
     //LeapFrog leap_frog(rdotdot, total_energy, angular_momentum);
     //SemiImplicitEuler semi_implicit_euler(rdotdot, total_energy, angular_momentum);
     
@@ -74,11 +75,11 @@ int main() {
         std::cout << " - complete\n";
 
         std::cout << "  Using RK2 Integration";
-        //runge_kutta.integrate(2, initial_position, eccentricity, (dt * max_iter), dt, m).export_to_file("runge_kutta_2_", "Runge Kutta 2");
+        runge_kutta.integrate(2, initial_position, eccentricity, t_max, dt, m).export_to_file("runge_kutta_2_", "Runge Kutta 2");
         std::cout << " - complete\n";
 
         std::cout << "  Using RK4 Integration";
-        //runge_kutta.integrate(4, initial_position, eccentricity, (dt * max_iter), dt, m).export_to_file("runge_kutta_4_", "Runge Kutta 4");
+        runge_kutta.integrate(4, initial_position, eccentricity, t_max, dt, m).export_to_file("runge_kutta_4_", "Runge Kutta 4");
         std::cout << " - complete\n";
 
         std::cout << "  Using LeapFrog Integration";
