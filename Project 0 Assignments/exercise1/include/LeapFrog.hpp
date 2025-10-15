@@ -2,15 +2,18 @@
 #define LEAPFROG_HPP
 
 #include <iostream>
+#include <functional>
+
 #include "Vector2D.hpp"
 #include "SimulationResult.hpp"
-#include <functional>
+#include "Phase.hpp"
+
 
 class LeapFrog
 {
 private:
     // the function that we will integrate
-    std::function<Vector2D(const Vector2D &)> rdotdot;
+    std::function<Phase(const Phase&)> derivative;
 
     // helper functions
     std::function<double(const Vector2D &, const Vector2D &)> total_energy_function;
@@ -18,12 +21,12 @@ private:
 
 public:
     LeapFrog(
-        std::function<Vector2D(const Vector2D &)> function,
+        std::function<Phase(const Phase &)> function,
         std::function<double(const Vector2D &, const Vector2D &)> energy_function,
         std::function<double(const Vector2D &, const Vector2D &)> angular_momentum_function
     )
     {
-        this->rdotdot = function;
+        this->derivative = function;
         this->total_energy_function = energy_function;
         this->angular_momentum_function = angular_momentum_function;
     }
@@ -47,26 +50,27 @@ public:
         int n_steps = static_cast<int>(t_max / dt);
 
 
-        auto current_position = result.positions.back();
-        auto current_velocity = result.velocities.back();
+        Phase current_phase = Phase(
+            result.positions.back(), 
+            result.velocities.back()
+        );
         
         for(int i = 0; i < n_steps; i++)
         {
-            // update the velocity half a step
-            auto velocity_half_step = current_velocity + rdotdot(current_position) * dt/2;
+            current_phase.velocity += derivative(current_phase).velocity * dt/2;
+
+            current_phase.position += current_phase.velocity * dt;
+
+            current_phase.velocity += derivative(current_phase).velocity * dt/2;
+
             
-            // update the total position as well as the velocity
-            current_position += velocity_half_step * dt;
-            current_velocity = velocity_half_step + rdotdot(current_position) * dt/2;
 
 
-            // append new positions to the grid
-            result.positions.push_back(current_position);
-            result.velocities.push_back(current_velocity);
-    
-            // append energy and total momentum to the grid
-            result.energies.push_back(total_energy_function(current_position, current_velocity));
-            result.angular_moments.push_back(angular_momentum_function(current_position, current_velocity));
+            // store the new position and velocity
+            result.positions.push_back(current_phase.position);
+            result.velocities.push_back(current_phase.velocity);
+            result.energies.push_back(total_energy_function(current_phase.position, current_phase.velocity));
+            result.angular_moments.push_back(angular_momentum_function(current_phase.position, current_phase.velocity));
         }
 
 

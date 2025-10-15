@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <chrono>
 
 
 // includes of some of our helper classes
@@ -51,7 +52,7 @@ int main() {
     // create instances of our integrators
     ExplicitEuler explicit_euler(rdotdot, total_energy, angular_momentum);
     RungeKutta runge_kutta(rdotdot, total_energy, angular_momentum);
-    //LeapFrog leap_frog(rdotdot, total_energy, angular_momentum);
+    LeapFrog leap_frog(rdotdot, total_energy, angular_momentum);
     //SemiImplicitEuler semi_implicit_euler(rdotdot, total_energy, angular_momentum);
     
 
@@ -71,23 +72,35 @@ int main() {
         std::cout << "\nSimulating method with time step " << dt << "\n";
 
         std::cout << "  Using Euler Integration";
-        explicit_euler.integrate(initial_position, eccentricity, t_max, dt, m).export_to_file("explicit_euler_", "Explicit Euler");
-        std::cout << " - complete\n";
+        auto start_euler_e = std::chrono::high_resolution_clock::now();
+        auto result_euler_e = explicit_euler.integrate(initial_position, eccentricity, t_max, dt, m);
+        auto duration_euler_e = std::chrono::high_resolution_clock::now() - start_euler_e;
+        std::cout << " - complete (" << std::chrono::duration<double>(duration_euler_e).count() << " s)\n";
+        result_euler_e.export_to_file("explicit_euler_", "Explicit Euler");
 
         std::cout << "  Using RK2 Integration";
-        runge_kutta.integrate(2, initial_position, eccentricity, t_max, dt, m).export_to_file("runge_kutta_2_", "Runge Kutta 2");
-        std::cout << " - complete\n";
+        auto start_rk2 = std::chrono::high_resolution_clock::now();
+        auto result_rk2 = runge_kutta.integrate(2, initial_position, eccentricity, t_max, dt, m);
+        auto duration_rk2 = std::chrono::high_resolution_clock::now() - start_rk2;
+        std::cout << " - complete (" << std::chrono::duration<double>(duration_rk2).count() << " s)\n";
+        result_rk2.export_to_file("runge_kutta_2_", "Runge Kutta 2");
 
         std::cout << "  Using RK4 Integration";
-        runge_kutta.integrate(4, initial_position, eccentricity, t_max, dt, m).export_to_file("runge_kutta_4_", "Runge Kutta 4");
-        std::cout << " - complete\n";
+        auto start_rk4 = std::chrono::high_resolution_clock::now();
+        auto result_rk4 = runge_kutta.integrate(4, initial_position, eccentricity, t_max, dt, m);
+        auto duration_rk4 = std::chrono::high_resolution_clock::now() - start_rk4;
+        std::cout << " - complete (" << std::chrono::duration<double>(duration_rk4).count() << " s)\n";
+        result_rk4.export_to_file("runge_kutta_4_", "Runge Kutta 4");
 
         std::cout << "  Using LeapFrog Integration";
-        //leap_frog.integrate(initial_position, eccentricity, (dt * max_iter), dt, m).export_to_file("leap_frog_", "LeapFrog");
-        std::cout << " - complete\n";
+        auto start_leap_frog = std::chrono::high_resolution_clock::now();
+        auto result_leap_frog = leap_frog.integrate(initial_position, eccentricity, t_max, dt, m);
+        auto duration_leap_frog = std::chrono::high_resolution_clock::now() - start_leap_frog;
+        std::cout << " - complete (" << std::chrono::duration<double>(duration_leap_frog).count() << " s)\n";
+        result_leap_frog.export_to_file("leap_frog_", "LeapFrog");
 
         std::cout << "  Using SemiImplicitEuler Integration";
-        //semi_implicit_euler.integrate(initial_position, eccentricity, (dt * max_iter), dt, m).export_to_file("semi_implicit_euler_", "SemiImplicitEuler");
+        //semi_implicit_euler.integrate(initial_position, eccentricity, t_max, dt, m).export_to_file("semi_implicit_euler_", "SemiImplicitEuler");
         std::cout << " - complete\n";
 
     }
