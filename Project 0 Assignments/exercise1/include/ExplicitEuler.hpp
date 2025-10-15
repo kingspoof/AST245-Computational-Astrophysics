@@ -8,20 +8,21 @@
 
 #include "Vector2D.hpp"
 #include "SimulationResult.hpp"
+#include "Phase.hpp"
 
 class ExplicitEuler
 {
 private:
     // the function that we will integrate
-    std::function<Vector2D(const Vector2D &)> rdotdot;
+    std::function<Phase(const Phase &)> derivative;
     std::function<double(const Vector2D &, const Vector2D &)> total_energy_function;
     std::function<double(const Vector2D &, const Vector2D &)> angular_momentum_function;
 
 public:
     // first we have to define the constructor that takes the acceleration function as a parameter
-    ExplicitEuler(std::function<Vector2D(const Vector2D &)> rdotdot_func, std::function<double(const Vector2D &, const Vector2D &)> energy_func, std::function<double(const Vector2D &, const Vector2D &)> am_func)
+    ExplicitEuler(std::function<Phase(const Phase &)> rdotdot_func, std::function<double(const Vector2D &, const Vector2D &)> energy_func, std::function<double(const Vector2D &, const Vector2D &)> am_func)
     {
-        rdotdot = rdotdot_func;
+        derivative = rdotdot_func;
         total_energy_function = energy_func;
         angular_momentum_function = am_func;
     }
@@ -50,25 +51,25 @@ public:
         int n_steps = static_cast<int>(t_max / dt);
         
         
+
+        Phase current_phase = Phase(
+            result.positions.back(),
+            result.velocities.back()
+        );
+
         // now we perform the explicit euler integration
         for(int i = 0; i < n_steps; i++)
         {
-            // make a reference to the current position and velocity for easier access
-            Vector2D& current_position = result.positions.back();
-            Vector2D& current_velocity = result.velocities.back();
 
+            //this is the entire thing for the update of the phase
+            current_phase += derivative(current_phase) * dt;
 
-            // calculate the next step
-            // since we have added the step already to the list we only need to add the new velocity and position after this step
-            auto acceleration = rdotdot(current_position);
-            auto new_position = current_position + current_velocity * dt;
-            auto new_velocity = current_velocity + acceleration * dt;
 
             // store the new position and velocity
-            result.positions.push_back(new_position);
-            result.velocities.push_back(new_velocity);
-            result.energies.push_back(total_energy_function(new_position, new_velocity));
-            result.angular_moments.push_back(angular_momentum_function(new_position, new_velocity));
+            result.positions.push_back(current_phase.position);
+            result.velocities.push_back(current_phase.velocity);
+            result.energies.push_back(total_energy_function(current_phase.position, current_phase.velocity));
+            result.angular_moments.push_back(angular_momentum_function(current_phase.position, current_phase.velocity));
         }
     
         return result;
